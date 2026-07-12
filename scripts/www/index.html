@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>湾泥渡村 · 手机版</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.11.0/sql-wasm.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f5f5f5; padding: 15px; }
+        .container { max-width: 1400px; margin: 0 auto; background-color: white; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); padding: 20px; }
+        header { text-align: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid #4a6fa5; }
+        h1 { color: #2c3e50; margin-bottom: 10px; font-size: 24px; }
+        .stats-section { background-color: #e9f7fe; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #b8daff; }
+        .stats-row { display: flex; flex-wrap: wrap; justify-content: space-around; gap: 15px; margin-bottom: 15px; }
+        .stat-item { text-align: center; padding: 12px 8px; min-width: 100px; background: white; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: transform 0.2s, box-shadow 0.2s; }
+        .stat-item:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .stat-value { font-size: 24px; font-weight: bold; color: #2c3e50; margin-bottom: 5px; }
+        .stat-label { font-size: 14px; color: #6c757d; }
+        .stats-actions { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        .search-section { background-color: #f8f9fa; padding: 20px; border-radius: 6px; margin-bottom: 25px; border: 1px solid #dee2e6; }
+        .search-controls { display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; margin-bottom: 15px; }
+        .search-type-selector { flex: 2; min-width: 200px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #495057; font-size: 14px; }
+        input, select { width: 100%; padding: 10px 12px; border: 1px solid #ced4da; border-radius: 4px; font-size: 14px; }
+        .search-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+        button { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: bold; transition: all 0.2s; }
+        .btn-primary { background: linear-gradient(135deg, #4a6fa5, #3a5a8c); color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border: none; }
+        .btn-primary:hover { background: linear-gradient(135deg, #3a5a8c, #2c4a6e); transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+        .btn-secondary { background: linear-gradient(135deg, #6c757d, #5a6268); color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .btn-secondary:hover { background: linear-gradient(135deg, #5a6268, #4e555b); transform: translateY(-1px); }
+        .btn-success { background: linear-gradient(135deg, #28a745, #218838); color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .btn-success:hover { background: linear-gradient(135deg, #218838, #1e7e34); transform: translateY(-1px); }
+        .btn-danger { background: linear-gradient(135deg, #dc3545, #c82333); color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .btn-danger:hover { background: linear-gradient(135deg, #c82333, #bd2130); transform: translateY(-1px); }
+        .btn-info { background: linear-gradient(135deg, #17a2b8, #138496); color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .btn-info:hover { background: linear-gradient(135deg, #138496, #0f6674); transform: translateY(-1px); }
+        .btn-warning { background: linear-gradient(135deg, #ffc107, #e0a800); color: #212529; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .btn-warning:hover { background: linear-gradient(135deg, #e0a800, #c69500); transform: translateY(-1px); }
+        .copy-btn { padding: 0 6px !important; font-size: 11px !important; border: none !important; background: transparent !important; color: #999 !important; cursor: pointer; transition: color 0.2s; margin-left: 4px; }
+        .copy-btn:hover { color: #4a6fa5 !important; }
+        .batch-toolbar { background-color: #e9f7fe; padding: 15px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #b8daff; display: none; }
+        .batch-info { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .batch-info span { font-weight: bold; color: #2c3e50; }
+        .data-count { margin: 15px 0; color: #6c757d; font-size: 14px; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .table-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
+        .table-pagination-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #dee2e6; font-size: 14px; }
+        th { background-color: #4a6fa5; color: white; font-weight: bold; position: sticky; top: 0; }
+        tr:hover { background-color: #f0f7ff; transition: background-color 0.2s; }
+        tr.deceased { background-color: #ffe6e6 !important; color: #b30000 !important; }
+        tr.deceased td { color: #b30000 !important; text-decoration: line-through; font-weight: bold; }
+        tr.no-household { background-color: #fff3cd !important; }
+        .table-checkbox-column { width: 40px; text-align: center; }
+        .household-link { color: #4a6fa5; text-decoration: none; font-weight: bold; display: inline-block; margin-right: 10px; margin-bottom: 5px; }
+        .actions-cell { white-space: nowrap; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); overflow-y: auto; }
+        .modal-content { background-color: white; margin: 20px auto; padding: 25px; border-radius: 28px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; position: relative; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #dee2e6; }
+        .close { font-size: 28px; font-weight: bold; cursor: pointer; color: #6c757d; }
+        .form-row { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 15px; }
+        .form-group { flex: 1; min-width: 200px; }
+        textarea { width: 100%; padding: 10px 12px; border: 1px solid #ced4da; border-radius: 4px; font-size: 14px; font-family: inherit; resize: vertical; }
+        .household-members { margin-top: 25px; padding: 20px; background-color: #f8f9fa; border-radius: 6px; border-left: 4px solid #4a6fa5; }
+        .household-title { color: #2c3e50; margin-bottom: 15px; font-size: 18px; }
+        .household-management { margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 6px; }
+        .household-actions { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        .household-member-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background-color: white; border-radius: 4px; margin-bottom: 8px; border: 1px solid #dee2e6; }
+        .member-actions { display: flex; gap: 5px; }
+        .warning-dialog { text-align: center; padding: 30px; }
+        .warning-icon { font-size: 48px; color: #dc3545; margin-bottom: 20px; }
+        .warning-text { margin-bottom: 30px; font-size: 16px; line-height: 1.6; }
+        .warning-actions { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+        .pagination-section { display: flex; justify-content: space-between; align-items: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid #eee; flex-wrap: wrap; gap: 15px; }
+        .pagination { display: flex; gap: 5px; flex-wrap: wrap; }
+        .page-btn { padding: 8px 12px; border: 1px solid #dee2e6; background-color: white; cursor: pointer; border-radius: 4px; min-width: 36px; text-align: center; }
+        .page-btn.active { background-color: #4a6fa5; color: white; }
+        .page-size-selector { display: flex; align-items: center; gap: 10px; }
+        .detail-section { margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+        .detail-row { display: flex; margin-bottom: 10px; flex-wrap: wrap; }
+        .detail-label { font-weight: bold; width: 150px; color: #495057; }
+        .detail-value { flex: 1; min-width: 200px; }
+        .notes-section { background-color: #f8f9fa; padding: 15px; border-radius: 6px; margin-top: 20px; }
+        .group-stats-modal { max-width: 700px; }
+        .group-stats-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .group-stats-table th, .group-stats-table td { padding: 10px; text-align: center; border: 1px solid #dee2e6; }
+        .chart-container { display: flex; flex-wrap: wrap; gap: 20px; }
+        .fa { margin-right: 5px; }
+        .edit-mode .detail-value { padding: 8px; border: 1px solid #ced4da; border-radius: 4px; background-color: white; }
+        .family-relationship { color: #4a6fa5; font-weight: bold; }
+        .household-badge { background-color: #e9f7fe; color: #4a6fa5; padding: 2px 6px; border-radius: 10px; font-size: 12px; margin-left: 5px; }
+        .age-column { width: 70px; text-align: center; }
+        .phone-link { color: #28a745; text-decoration: none; font-weight: bold; }
+        .search-input-group { display: flex; gap: 10px; width: 100%; }
+        /* 隐藏死亡人员开关 */
+        .hide-deceased-wrapper { display: inline-flex !important; align-items: center; gap: 6px; font-size: 13px; color: #495057; cursor: pointer; user-select: none; padding: 6px 12px; border: 1px solid #ced4da; border-radius: 6px; background: white; white-space: nowrap; flex-shrink: 0; }
+        .hide-deceased-wrapper:hover { border-color: #4a6fa5; }
+        .hide-deceased-wrapper input[type="checkbox"] { width: 16px; height: 16px; accent-color: #4a6fa5; cursor: pointer; margin: 0; }
+        .search-tools { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 10px; }
+        @media print { body * { visibility: hidden; } .modal-content, .modal-content * { visibility: visible; } .modal-content { position: absolute; left: 0; top: 0; width: 100%; } .detail-actions, .close, .household-management { display: none !important; } }
+        @media (max-width: 768px) {
+            body { padding: 6px; }
+            .container { padding: 10px; }
+            h1 { font-size: 20px; margin-bottom: 5px; }
+            .stats-section { padding: 8px 10px; margin-bottom: 12px; }
+            .stats-row { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 8px; padding: 4px 0 8px 0; margin-bottom: 5px; -webkit-overflow-scrolling: touch; }
+            .stat-item { flex: 0 0 auto; min-width: 75px; background: #e9f7fe; border-radius: 16px; padding: 6px 8px; text-align: center; }
+            .stat-value { font-size: 18px; font-weight: bold; margin-bottom: 2px; }
+            .stat-label { font-size: 11px; white-space: nowrap; }
+            .stats-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; }
+            .stats-actions button { flex: 1 0 auto; min-width: 70px; padding: 6px 4px; font-size: 12px; }
+            .search-section { padding: 10px; }
+            .search-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+            .search-actions button { flex: 1 0 auto; min-width: 70px; padding: 6px 4px; font-size: 12px; }
+            table th:nth-child(5), table td:nth-child(5),
+            table th:nth-child(6), table td:nth-child(6) { display: none; }
+            table th, table td { padding: 6px 4px; font-size: 13px; white-space: nowrap; }
+            .actions-cell button { padding: 4px 8px; font-size: 12px; margin: 0 2px; }
+            .pagination-section { flex-direction: column; align-items: stretch; gap: 8px; }
+            .pagination { justify-content: center; }
+            .page-btn { padding: 4px 8px; min-width: 30px; font-size: 12px; }
+            .page-size-selector { justify-content: center; }
+            .modal-content { width: 95%; padding: 12px; }
+            .form-row { flex-direction: column; gap: 10px; }
+            .form-group label { font-size: 12px; }
+            input, select, textarea { padding: 6px 8px; font-size: 13px; }
+            button { padding: 6px 10px; font-size: 13px; }
+            .batch-info { flex-direction: column; align-items: stretch; }
+            .batch-info button { width: 100%; margin: 2px 0; }
+            .detail-label { width: 90px; font-size: 12px; }
+            .detail-value { font-size: 13px; }
+            .household-member-item { flex-direction: row !important; flex-wrap: nowrap !important; justify-content: space-between !important; padding: 4px 6px !important; margin-bottom: 2px !important; }
+            .member-actions { margin-top: 0 !important; align-self: auto !important; }
+            .member-actions button { white-space: nowrap; font-size: 11px; padding: 2px 8px; }
+            .member-actions { margin-top: 6px; align-self: flex-end; }
+        }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .btn-xs { padding: 2px 8px; font-size: 11px; }
+        .data-tools { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+        .age-input-group { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .age-input-group input { width: 80px; padding: 6px 8px; }
+        .age-input-group span { color: #6c757d; }
+    </style>
+</head>
+<body>
+<div class="container" id="mainApp">
+    <header>
+        <h1><i class="fas fa-users"></i> 湾泥渡村 · 手机版</h1>
+        <p><span id="userDisplay">离线模式</span></p>
+    </header>
+
+    <!-- 统计卡片 -->
+    <div class="stats-section">
+        <div class="stats-row" id="stats-row"></div>
+        <div class="stats-actions">
+            <button class="btn-warning" id="group-stats-btn"><i class="fas fa-table"></i> 各组统计</button>
+            <button class="btn-info" id="chart-btn"><i class="fas fa-chart-bar"></i> 图表</button>
+        </div>
+    </div>
+
+    <!-- 搜索 -->
+    <section class="search-section">
+        <div class="search-controls">
+            <div class="search-type-selector">
+                <label>全局搜索</label>
+                <div class="search-input-group">
+                    <input type="text" id="search-input" placeholder="姓名、电话、地址、身份证...">
+                    <button class="btn-primary" id="search-btn"><i class="fas fa-search"></i> 查询</button>
+                    <button class="btn-info" id="advanced-search-btn"><i class="fas fa-filter"></i> 高级</button>
+                </div>
+            </div>
+        </div>
+        <!-- 搜索工具行：不显示死亡人员 + 快捷操作 -->
+        <div class="search-tools">
+            <label class="hide-deceased-wrapper" id="hideDeceasedWrapper" title="勾选后隐藏已死亡人员">
+                <input type="checkbox" id="hideDeceasedCheckbox">
+                <span class="label-text">不显示死亡人员</span>
+            </label>
+            <button class="btn-secondary" id="reset-btn"><i class="fas fa-redo"></i> 重置</button>
+            <button class="btn-success" id="add-btn"><i class="fas fa-user-plus"></i> 添加</button>
+            <button class="btn-info" id="export-data-btn"><i class="fas fa-file-export"></i> 导出数据</button>
+            <button class="btn-info" id="import-data-btn"><i class="fas fa-file-import"></i> 导入数据</button>
+            <button class="btn-danger" id="batch-delete-btn"><i class="fas fa-trash-alt"></i> 批量删除</button>
+        </div>
+    </section>
+
+    <!-- 批量工具栏 -->
+    <div class="batch-toolbar" id="batch-toolbar">
+        <div class="batch-info"><span><i class="fas fa-check-circle"></i> 已选择 <span id="selected-count">0</span> 项</span>
+            <button class="btn-warning" id="batch-edit-btn"><i class="fas fa-edit"></i> 批量修改</button>
+            <button class="btn-danger" id="confirm-batch-delete"><i class="fas fa-trash-alt"></i> 确认删除</button>
+            <button class="btn-secondary" id="cancel-batch"><i class="fas fa-times"></i> 取消</button>
+        </div>
+    </div>
+
+    <div class="data-count" id="data-count">加载中...</div>
+    <div class="table-controls">
+        <div class="table-pagination-top" id="table-pagination-top"></div>
+        <div class="page-size-selector">
+            <label>每页：</label>
+            <select id="items-per-page-top">
+                <option value="10">10</option>
+                <option value="20" selected>20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+        </div>
+    </div>
+
+    <table id="villagers-table">
+        <thead><tr><th class="table-checkbox-column"></th><th>姓名</th><th>性别</th><th class="age-column">年龄</th><th>户籍地址</th><th>与户主关系</th><th>电话</th><th>操作</th></tr></thead>
+        <tbody id="table-body"></tbody>
+    </table>
+
+    <div class="pagination-section">
+        <div class="pagination" id="pagination"></div>
+        <div class="page-size-selector">
+            <label>每页：</label>
+            <select id="items-per-page-bottom">
+                <option value="10">10</option>
+                <option value="20" selected>20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 所有模态框 ===== -->
+<div id="edit-modal" class="modal"><div class="modal-content"><div class="modal-header"><h2 id="modal-title">添加新村民</h2><span class="close" id="close-modal">&times;</span></div><form id="villager-form"><div class="form-row"><div class="form-group"><label>姓名 *</label><input type="text" id="form-name" required></div><div class="form-group"><label>性别 *</label><select id="form-gender" required><option value="">请选择</option><option value="男">男</option><option value="女">女</option></select></div></div><div class="form-row"><div class="form-group"><label>身份证号 *</label><input type="text" id="form-id" required></div><div class="form-group"><label>户籍地址 *</label><input type="text" id="form-address" required placeholder="如：湾泥渡村10组10号"></div></div><div class="form-row"><div class="form-group"><label>与户主关系 *</label><select id="form-relation" required><option value="">请选择</option><option value="户主">户主</option><option value="妻">妻</option><option value="夫">夫</option><option value="子">子</option><option value="女">女</option><option value="儿媳">儿媳</option><option value="女婿">女婿</option><option value="孙子">孙子</option><option value="孙女">孙女</option><option value="母亲">母亲</option><option value="父亲">父亲</option><option value="弟">弟</option><option value="妹">妹</option><option value="养女">养女</option><option value="非亲属">非亲属</option><option value="其他">其他</option><option value="独立">独立（无户）</option></select></div><div class="form-group"><label>电话</label><input type="text" id="form-phone"></div></div><div class="form-row"><div class="form-group"><label>备注一</label><textarea id="form-note1" rows="2"></textarea></div><div class="form-group"><label>备注二</label><textarea id="form-note2" rows="2"></textarea></div></div><div class="form-row"><div class="form-group"><label>特殊身份</label><div style="display:flex; flex-wrap:wrap; gap:10px;"><label><input type="checkbox" name="tags" value="党员"> 党员</label><label><input type="checkbox" name="tags" value="低保户"> 低保户</label><label><input type="checkbox" name="tags" value="特困供养"> 特困供养</label><label><input type="checkbox" name="tags" value="残疾人"> 残疾人</label><label><input type="checkbox" name="tags" value="退役军人"> 退役军人</label><label><input type="checkbox" name="tags" value="优抚对象"> 优抚对象</label><label><input type="checkbox" name="tags" value="脱贫户"> 脱贫户</label><label><input type="checkbox" name="tags" value="监测户"> 监测户</label><label><input type="checkbox" name="tags" value="吸毒人员"> 吸毒人员</label><label><input type="checkbox" name="tags" value="社区矫正"> 社区矫正</label><label><input type="checkbox" name="tags" value="重点关注"> 重点关注</label><label><input type="checkbox" name="tags" value="留守儿童"> 留守儿童</label><label><input type="checkbox" name="tags" value="独居老人"> 独居老人</label></div></div></div><input type="hidden" id="form-index"><div style="margin-top:30px; display:flex; gap:15px;"><button type="submit" class="btn-success"><i class="fas fa-save"></i> 保存</button><button type="button" class="btn-secondary" id="cancel-edit"><i class="fas fa-times"></i> 取消</button></div></form></div></div>
+
+<div id="detail-modal" class="modal"><div class="modal-content"><div class="modal-header"><h2 id="detail-title">村民详细信息</h2><span class="close" id="close-detail">&times;</span></div><div id="detail-content"></div><div class="detail-actions" id="detail-actions"><button class="btn-primary" id="edit-detail-btn"><i class="fas fa-edit"></i> 编辑</button><button class="btn-danger" id="delete-detail-btn"><i class="fas fa-trash-alt"></i> 删除</button><button class="btn-info" id="print-detail-btn"><i class="fas fa-print"></i> 打印</button><button class="btn-secondary" id="close-detail-btn"><i class="fas fa-times"></i> 关闭</button></div></div></div>
+
+<div id="delete-modal" class="modal"><div class="modal-content warning-dialog"><div class="warning-icon">⚠️</div><h2>确认删除</h2><div class="warning-text"><p>您确定要删除 <strong id="delete-name"></strong> 吗？</p><p>此操作无法撤销！</p></div><div class="warning-actions"><button class="btn-danger" id="confirm-delete"><i class="fas fa-trash-alt"></i> 确认删除</button><button class="btn-secondary" id="cancel-delete"><i class="fas fa-times"></i> 取消</button></div><input type="hidden" id="delete-index"></div></div>
+
+<div id="group-stats-modal" class="modal"><div class="modal-content group-stats-modal"><div class="modal-header"><h2>各组统计</h2><span class="close" id="close-group-stats">&times;</span></div><div id="group-stats-content"></div></div></div>
+
+<!-- ★★★ 导入模态框（支持JSON） ★★★ -->
+<div id="import-modal" class="modal"><div class="modal-content"><div class="modal-header"><h2><i class="fas fa-file-import"></i> 导入数据</h2><span class="close" id="close-import">&times;</span></div><div style="padding:20px;"><div class="form-group"><label>选择文件（JSON格式）</label><input type="file" id="import-file" accept=".json"><p class="help-text">请选择从手机版导出的JSON数据文件</p></div><div class="form-group"><label>导入模式</label><div><label><input type="radio" name="import-mode" value="append" checked> 追加（新增+更新）</label><label style="margin-left:20px;"><input type="radio" name="import-mode" value="replace"> 替换全部</label></div></div><div style="margin-top:30px; display:flex; gap:15px;"><button class="btn-primary" id="start-import"><i class="fas fa-upload"></i> 开始导入</button><button class="btn-secondary" id="cancel-import"><i class="fas fa-times"></i> 取消</button></div></div></div></div>
+
+<div id="batch-edit-modal" class="modal"><div class="modal-content"><div class="modal-header"><h2><i class="fas fa-edit"></i> 批量修改</h2><span class="close" id="close-batch-edit">&times;</span></div><div style="padding:20px;"><div class="form-group"><label>选择字段</label><select id="batch-field"><option value="">请选择</option><option value="户籍地址">户籍地址</option><option value="电话号码">电话号码</option><option value="备注一">备注一</option><option value="备注二">备注二</option></select></div><div class="form-group" id="batch-value-container" style="display:none;"><label>新值</label><input type="text" id="batch-value" placeholder="请输入新值"></div><div style="margin-top:30px; display:flex; gap:15px;"><button class="btn-success" id="apply-batch-edit"><i class="fas fa-check"></i> 应用</button><button class="btn-secondary" id="cancel-batch-edit"><i class="fas fa-times"></i> 取消</button></div></div></div></div>
+
+<div id="chart-modal" class="modal"><div class="modal-content" style="max-width:1000px;"><div class="modal-header"><h2><i class="fas fa-chart-bar"></i> 统计图表</h2><span class="close" id="close-chart">&times;</span></div><div style="padding:20px;"><div class="chart-container"><div style="flex:1; min-width:300px;"><h4>性别比例</h4><canvas id="gender-chart" height="250"></canvas></div><div style="flex:1; min-width:300px;"><h4>年龄分布</h4><canvas id="age-chart" height="250"></canvas></div><div style="flex-basis:100%; margin-top:30px;"><h4>各组人口</h4><canvas id="group-chart" height="300"></canvas></div></div></div></div></div>
+
+<!-- ★★★ 高级搜索模态框（含年龄范围） ★★★ -->
+<div id="advanced-search-modal" class="modal">
+    <div class="modal-content" style="max-width:520px;">
+        <div class="modal-header">
+            <h2><i class="fas fa-filter"></i> 高级查询</h2>
+            <span class="close" id="close-advanced-search">&times;</span>
+        </div>
+        <div style="padding:20px;">
+            <div class="form-group">
+                <label>特殊身份（可多选，同时满足）</label>
+                <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
+                    <label><input type="checkbox" class="adv-tag" value="党员"> 党员</label>
+                    <label><input type="checkbox" class="adv-tag" value="低保户"> 低保户</label>
+                    <label><input type="checkbox" class="adv-tag" value="特困供养"> 特困供养</label>
+                    <label><input type="checkbox" class="adv-tag" value="残疾人"> 残疾人</label>
+                    <label><input type="checkbox" class="adv-tag" value="退役军人"> 退役军人</label>
+                    <label><input type="checkbox" class="adv-tag" value="优抚对象"> 优抚对象</label>
+                    <label><input type="checkbox" class="adv-tag" value="脱贫户"> 脱贫户</label>
+                    <label><input type="checkbox" class="adv-tag" value="监测户"> 监测户</label>
+                    <label><input type="checkbox" class="adv-tag" value="吸毒人员"> 吸毒人员</label>
+                    <label><input type="checkbox" class="adv-tag" value="社区矫正"> 社区矫正</label>
+                    <label><input type="checkbox" class="adv-tag" value="重点关注"> 重点关注</label>
+                    <label><input type="checkbox" class="adv-tag" value="留守儿童"> 留守儿童</label>
+                    <label><input type="checkbox" class="adv-tag" value="独居老人"> 独居老人</label>
+                </div>
+                <p style="font-size:12px; color:#888; margin-top:10px;">提示：勾选多个标签时，将查询同时满足所有标签的人员</p>
+            </div>
+            <!-- ★★★ 年龄范围 ★★★ -->
+            <div class="form-group" style="margin-top:15px;">
+                <label>年龄范围</label>
+                <div class="age-input-group">
+                    <input type="number" id="advAgeMin" placeholder="从" min="0" max="150">
+                    <span>—</span>
+                    <input type="number" id="advAgeMax" placeholder="到" min="0" max="150">
+                    <span style="font-size:12px; color:#888;">岁</span>
+                    <button type="button" class="btn-secondary btn-sm" id="advAgeClear" style="padding:4px 12px; font-size:12px;">清除</button>
+                </div>
+                <p style="font-size:12px; color:#888; margin-top:6px;">留空表示不限制，可与其他条件组合使用</p>
+            </div>
+            <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="btn-primary" id="adv-search-submit"><i class="fas fa-search"></i> 查询</button>
+                <button class="btn-secondary" id="adv-search-cancel"><i class="fas fa-times"></i> 取消</button>
+                <button class="btn-secondary" id="adv-search-clear"><i class="fas fa-undo"></i> 清空</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="select-member-modal" class="modal"><div class="modal-content" style="max-width:600px;"><div class="modal-header"><h2><i class="fas fa-user-plus"></i> 选择家庭成员</h2><span class="close" id="close-select-member">&times;</span></div><div style="padding:20px;"><div style="margin-bottom:15px;"><button class="btn-success" id="add-new-member-btn"><i class="fas fa-user-plus"></i> 添加新成员</button></div><div id="available-members-list" style="max-height:300px; overflow-y:auto; margin-top:10px;"></div><div style="margin-top:30px;"><button class="btn-secondary" id="cancel-select-member"><i class="fas fa-times"></i> 取消</button></div></div></div></div>
+
+<script>
+// ============================================================
+// 1. 初始化 SQLite 数据库（使用 sql.js）
+// ============================================================
+let db = null;
+let SQL = null;
+const SQL_JS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.11.0/sql-wasm.js';
+
+function initSQL() {
+    return new Promise((resolve, reject) => {
+        if (typeof SQLite !== 'undefined') {
+            SQLite({
+                locateFile: filename => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.11.0/' + filename
+            }).then(_SQL => {
+                SQL = _SQL;
+                const saved = localStorage.getItem('villager_db');
+                let data = null;
+                if (saved) {
+                    try {
+                        const uint8 = new Uint8Array(saved.split(',').map(Number));
+                        data = uint8;
+                    } catch(e) {}
+                }
+                if (data) {
+                    db = new SQL.Database(data);
+                } else {
+                    db = new SQL.Database();
+                    initTables();
+                }
+                saveDB();
+                resolve();
+            }).catch(reject);
+        } else {
+            const script = document.createElement('script');
+            script.src = SQL_JS_URL;
+            script.onload = () => {
+                initSQL().then(resolve).catch(reject);
+            };
+            script.onerror = reject;
+            document.head.appendChild(script);
+        }
+    });
+}
+
+function initTables() {
+    db.run(`
+        CREATE TABLE IF NOT EXISTS villagers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            姓名 TEXT,
+            性别 TEXT,
+            公民身份证号码 TEXT UNIQUE,
+            户籍地址 TEXT,
+            与户主关系 TEXT,
+            电话号码 TEXT,
+            备注一 TEXT,
+            备注二 TEXT,
+            tags TEXT,
+            deleted_at TEXT
+        )
+    `);
+    db.run(`
+        CREATE TABLE IF NOT EXISTS villager_photos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            villager_id INTEGER,
+            filename TEXT,
+            filepath TEXT,
+            description TEXT,
+            image_data TEXT,
+            uploaded_by INTEGER,
+            created_at TEXT
+        )
+    `);
+    db.run(`
+        CREATE TABLE IF NOT EXISTS kinship (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            person1_id INTEGER,
+            person2_id INTEGER,
+            relation TEXT,
+            auto INTEGER DEFAULT 0,
+            created_at TEXT
+        )
+    `);
+}
+
+function saveDB() {
+    if (!db) return;
+    const data = db.export();
+    const arr = Array.from(data);
+    localStorage.setItem('villager_db', arr.join(','));
+}
+
+function withDB(callback) {
+    if (!db) { console.error('数据库未初始化'); return; }
+    const result = callback(db);
+    saveDB();
+    return result;
+}
+
+// ============================================================
+// 2. 本地数据库操作函数
+// ============================================================
+const localDB = {
+    getVillagers() {
+        return withDB(db => {
+            const stmt = db.prepare(`SELECT * FROM villagers WHERE deleted_at IS NULL ORDER BY 户籍地址, 
+                CASE 与户主关系 WHEN '户主' THEN 0 WHEN '妻' THEN 1 WHEN '夫' THEN 1 WHEN '子' THEN 2 WHEN '女' THEN 2 WHEN '儿媳' THEN 2 WHEN '女婿' THEN 2 WHEN '孙子' THEN 3 WHEN '孙女' THEN 3 WHEN '母亲' THEN 4 WHEN '父亲' THEN 4 WHEN '弟' THEN 5 WHEN '妹' THEN 5 ELSE 6 END`);
+            const result = [];
+            while (stmt.step()) {
+                result.push(stmt.getAsObject());
+            }
+            stmt.free();
+            return result;
+        });
+    },
+    addVillager(data) {
+        return withDB(db => {
+            const stmt = db.prepare(`INSERT INTO villagers (姓名, 性别, 公民身份证号码, 户籍地址, 与户主关系, 电话号码, 备注一, 备注二, tags, deleted_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)`);
+            stmt.run([data.姓名, data.性别, data.公民身份证号码, data.户籍地址, data.与户主关系, data.电话号码, data.备注一, data.备注二, data.tags || '']);
+            stmt.free();
+            return db.exec('SELECT last_insert_rowid()')[0].values[0][0];
+        });
+    },
+    updateVillager(id, data) {
+        return withDB(db => {
+            const stmt = db.prepare(`UPDATE villagers SET 姓名=?, 性别=?, 公民身份证号码=?, 户籍地址=?, 与户主关系=?, 电话号码=?, 备注一=?, 备注二=?, tags=? WHERE id=?`);
+            stmt.run([data.姓名, data.性别, data.公民身份证号码, data.户籍地址, data.与户主关系, data.电话号码, data.备注一, data.备注二, data.tags || '', id]);
+            stmt.free();
+        });
+    },
+    deleteVillager(id) {
+        return withDB(db => {
+            const stmt = db.prepare(`UPDATE villagers SET deleted_at = datetime('now') WHERE id=?`);
+            stmt.run([id]);
+            stmt.free();
+        });
+    },
+    getPhotos(villagerId) {
+        return withDB(db => {
+            const stmt = db.prepare(`SELECT * FROM villager_photos WHERE villager_id = ? ORDER BY created_at DESC`);
+            stmt.bind([villagerId]);
+            const result = [];
+            while (stmt.step()) {
+                result.push(stmt.getAsObject());
+            }
+            stmt.free();
+            return result;
+        });
+    },
+    addPhoto(villagerId, filename, imageData, description = '') {
+        return withDB(db => {
+            const stmt = db.prepare(`INSERT INTO villager_photos (villager_id, filename, filepath, description, image_data, created_at) 
+                VALUES (?, ?, ?, ?, ?, datetime('now'))`);
+            stmt.run([villagerId, filename, filename, description, imageData]);
+            stmt.free();
+            return db.exec('SELECT last_insert_rowid()')[0].values[0][0];
+        });
+    },
+    deletePhoto(photoId) {
+        return withDB(db => {
+            const stmt = db.prepare(`DELETE FROM villager_photos WHERE id=?`);
+            stmt.run([photoId]);
+            stmt.free();
+        });
+    },
+    updatePhotoDescription(photoId, description) {
+        return withDB(db => {
+            const stmt = db.prepare(`UPDATE villager_photos SET description=? WHERE id=?`);
+            stmt.run([description, photoId]);
+            stmt.free();
+        });
+    },
+    getKinship(villagerId) {
+        return withDB(db => {
+            const stmt = db.prepare(`SELECT k.id, k.person2_id, k.relation, v.姓名 as name 
+                FROM kinship k JOIN villagers v ON k.person2_id = v.id 
+                WHERE k.person1_id = ? AND v.deleted_at IS NULL ORDER BY k.id`);
+            stmt.bind([villagerId]);
+            const result = [];
+            while (stmt.step()) {
+                result.push(stmt.getAsObject());
+            }
+            stmt.free();
+            return result;
+        });
+    },
+    addKinship(person1_id, person2_id, relation) {
+        return withDB(db => {
+            const check = db.prepare(`SELECT id FROM kinship WHERE person1_id=? AND person2_id=? AND relation=?`);
+            check.bind([person1_id, person2_id, relation]);
+            if (check.step()) { check.free(); throw new Error('该关系已存在'); }
+            check.free();
+            const stmt = db.prepare(`INSERT INTO kinship (person1_id, person2_id, relation, auto, created_at) VALUES (?, ?, ?, 0, datetime('now'))`);
+            stmt.run([person1_id, person2_id, relation]);
+            stmt.free();
+        });
+    },
+    deleteKinship(id) {
+        return withDB(db => {
+            const stmt = db.prepare(`DELETE FROM kinship WHERE id=?`);
+            stmt.run([id]);
+            stmt.free();
+        });
+    },
+    exportAll() {
+        return withDB(db => {
+            const villagers = db.exec('SELECT * FROM villagers WHERE deleted_at IS NULL')[0]?.values || [];
+            const photos = db.exec('SELECT * FROM villager_photos')[0]?.values || [];
+            const kinship = db.exec('SELECT * FROM kinship')[0]?.values || [];
+            return { version: '1.0', exported_at: new Date().toISOString(), data: { villagers, photos, kinship } };
+        });
+    },
+    importData(data, mode = 'append') {
+        return withDB(db => {
+            if (mode === 'replace') {
+                db.exec('DELETE FROM villagers');
+                db.exec('DELETE FROM villager_photos');
+                db.exec('DELETE FROM kinship');
+            }
+            const villagers = data.villagers || [];
+            const photos = data.photos || [];
+            const kinship = data.kinship || [];
+
+            const insertVillager = db.prepare(`INSERT OR IGNORE INTO villagers (id, 姓名, 性别, 公民身份证号码, 户籍地址, 与户主关系, 电话号码, 备注一, 备注二, tags, deleted_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+            for (let v of villagers) {
+                const exist = db.prepare(`SELECT id FROM villagers WHERE 公民身份证号码 = ?`).get([v[4]]);
+                if (exist) {
+                    db.prepare(`UPDATE villagers SET 姓名=?, 性别=?, 户籍地址=?, 与户主关系=?, 电话号码=?, 备注一=?, 备注二=?, tags=? WHERE 公民身份证号码=?`)
+                        .run([v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[4]]);
+                } else {
+                    insertVillager.run(v);
+                }
+            }
+            insertVillager.free();
+            const insertPhoto = db.prepare(`INSERT OR IGNORE INTO villager_photos (id, villager_id, filename, filepath, description, image_data, created_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)`);
+            for (let p of photos) { insertPhoto.run(p); }
+            insertPhoto.free();
+            const insertKinship = db.prepare(`INSERT OR IGNORE INTO kinship (id, person1_id, person2_id, relation, auto, created_at) 
+                VALUES (?, ?, ?, ?, ?, ?)`);
+            for (let k of kinship) { insertKinship.run(k); }
+            insertKinship.free();
+        });
+    }
+};
+
+// ============================================================
+// 3. 界面逻辑
+// ============================================================
+let villagers = [];
+let currentVillagers = [];
+let currentPage = 1;
+let itemsPerPage = 20;
+let selectedItems = new Set();
+let isBatchMode = false;
+let currentHouseholdAddress = '';
+let currentSearchKeyword = '';
+let currentAgeMin = null;
+let currentAgeMax = null;
+let hideDeceased = false;
+let genderChart = null, ageChart = null, groupChart = null;
+
+const tableBody = document.getElementById('table-body');
+const dataCount = document.getElementById('data-count');
+const pagination = document.getElementById('pagination');
+const statsRow = document.getElementById('stats-row');
+const tablePaginationTop = document.getElementById('table-pagination-top');
+const editModal = document.getElementById('edit-modal');
+const detailModal = document.getElementById('detail-modal');
+const deleteModal = document.getElementById('delete-modal');
+const groupStatsModal = document.getElementById('group-stats-modal');
+const importModal = document.getElementById('import-modal');
+const batchEditModal = document.getElementById('batch-edit-modal');
+const chartModal = document.getElementById('chart-modal');
+const advancedSearchModal = document.getElementById('advanced-search-modal');
+const selectMemberModal = document.getElementById('select-member-modal');
+const hideDeceasedCheckbox = document.getElementById('hideDeceasedCheckbox');
+
+// 工具函数
+function calculateAgeFromID(idCard) {
+    if (!idCard || idCard.length !== 18) return 0;
+    try {
+        const birthYear = parseInt(idCard.substring(6,10));
+        const birthMonth = parseInt(idCard.substring(10,12))-1;
+        const birthDay = parseInt(idCard.substring(12,14));
+        const birthDate = new Date(birthYear, birthMonth, birthDay);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age--;
+        return age >=0 ? age : 0;
+    } catch(e) { return 0; }
+}
+
+function getHouseholdByAddress(villager) {
+    const members = [];
+    if (villager.与户主关系 === '独立') { members.push(villager); return members; }
+    const address = villager.户籍地址;
+    for (let v of villagers) {
+        if (v.户籍地址 === address && v.与户主关系 !== '独立') members.push(v);
+    }
+    return members;
+}
+
+function countHouseholdMembers(index) {
+    const villager = villagers[index];
+    return getHouseholdByAddress(villager).length;
+}
+
+function sortByAddress(a, b) {
+    function parseAddress(addr) {
+        const mainMatch = addr.match(/湾泥[渡]?村(\d+)组(\d+)号/);
+        if (!mainMatch) return { group: 99999, number: 99999, sub: 99999 };
+        const group = parseInt(mainMatch[1]);
+        const number = parseInt(mainMatch[2]);
+        let sub = 0;
+        const subMatch = addr.match(/附([一二三四五六七八九十\d]+)号/);
+        if (subMatch) {
+            const chnMap = { '一':1, '二':2, '三':3, '四':4, '五':5, '六':6, '七':7, '八':8, '九':9, '十':10 };
+            sub = chnMap[subMatch[1]] || parseInt(subMatch[1]) || 0;
+        }
+        return { group, number, sub };
+    }
+    function rolePriority(relation) {
+        const map = {
+            '户主': 0, '妻': 1, '夫': 1,
+            '子': 2, '女': 2, '儿媳': 2, '女婿': 2,
+            '孙子': 3, '孙女': 3,
+            '母亲': 4, '父亲': 4,
+            '弟': 5, '妹': 5,
+            '其他': 6, '独立': 7
+        };
+        return map[relation] !== undefined ? map[relation] : 6;
+    }
+    const addrA = parseAddress(a.户籍地址);
+    const addrB = parseAddress(b.户籍地址);
+    if (addrA.group !== addrB.group) return addrA.group - addrB.group;
+    if (addrA.number !== addrB.number) return addrA.number - addrB.number;
+    if (addrA.sub !== addrB.sub) return addrA.sub - addrB.sub;
+    return rolePriority(a.与户主关系) - rolePriority(b.与户主关系);
+}
+
+function validateID(id) { return /^\d{17}[\dX]$/i.test(id); }
+
+// 加载数据（应用所有过滤条件）
+function loadVillagers() {
+    let raw = localDB.getVillagers() || [];
+    raw.sort(sortByAddress);
+    // 隐藏死亡人员
+    if (hideDeceased) {
+        raw = raw.filter(v => {
+            const d1 = v.备注一 && v.备注一.includes('死亡');
+            const d2 = v.备注二 && v.备注二.includes('死亡');
+            return !d1 && !d2;
+        });
+    }
+    // 标签过滤
+    if (currentSearchKeyword) {
+        const keyword = currentSearchKeyword.toLowerCase();
+        raw = raw.filter(v => Object.values(v).some(f => String(f).toLowerCase().includes(keyword)));
+    }
+    // 年龄过滤
+    if (currentAgeMin !== null || currentAgeMax !== null) {
+        raw = raw.filter(v => {
+            const age = calculateAgeFromID(v.公民身份证号码);
+            if (currentAgeMin !== null && age < currentAgeMin) return false;
+            if (currentAgeMax !== null && age > currentAgeMax) return false;
+            return true;
+        });
+    }
+    villagers = raw;
+    currentVillagers = [...villagers];
+    currentPage = 1;
+    renderTable();
+    updateStats();
+}
+
+function renderTable() {
+    const totalItems = currentVillagers.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+    const startIndex = (currentPage-1)*itemsPerPage;
+    const endIndex = Math.min(startIndex+itemsPerPage, totalItems);
+    const pageData = currentVillagers.slice(startIndex, endIndex);
+    tableBody.innerHTML = '';
+    pageData.forEach((villager, idx) => {
+        const row = document.createElement('tr');
+        const isDeceased = (villager.备注一 && villager.备注一.includes('死亡')) || (villager.备注二 && villager.备注二.includes('死亡'));
+        const isNoHousehold = villager.与户主关系 === '独立';
+        if (isDeceased) row.classList.add('deceased');
+        else if (isNoHousehold) row.classList.add('no-household');
+        const age = calculateAgeFromID(villager.公民身份证号码);
+        let householdBadge = '';
+        if (villager.与户主关系 === '户主') {
+            const fullIndex = villagers.findIndex(v => v.公民身份证号码 === villager.公民身份证号码);
+            if (fullIndex !== -1) householdBadge = `<span class="household-badge">${countHouseholdMembers(fullIndex)}人</span>`;
+        } else if (isNoHousehold) householdBadge = `<span class="household-badge" style="background-color:#fff3cd;color:#856404;">无户</span>`;
+        let phoneDisplay = villager.电话号码 || '';
+        if (phoneDisplay && /^1[3-9]\d{9}$/.test(phoneDisplay)) phoneDisplay = `<a href="tel:${phoneDisplay}" class="phone-link">${phoneDisplay}</a>`;
+        const checkboxHtml = isBatchMode ? `<input type="checkbox" class="row-checkbox" data-index="${startIndex+idx}">` : '';
+        row.innerHTML = `<td class="table-checkbox-column">${checkboxHtml}</td><td>${villager.姓名}</td><td>${villager.性别}</td><td class="age-column">${age>0?age:''}</td><td>${villager.户籍地址}</td><td>${villager.与户主关系} ${householdBadge}</td><td>${phoneDisplay}</td><td class="actions-cell"><button class="btn-info view-btn" data-id="${villager.id}"><i class="fas fa-eye"></i> 查看</button><button class="btn-primary edit-btn" data-id="${villager.id}"><i class="fas fa-edit"></i> 编辑</button></td>`;
+        tableBody.appendChild(row);
+    });
+    dataCount.textContent = `找到 ${totalItems} 条记录${totalPages>1 ? `，当前显示第 ${currentPage} 页` : ''}`;
+    renderPagination(totalPages, 'top');
+    renderPagination(totalPages, 'bottom');
+    document.querySelectorAll('.view-btn').forEach(btn => btn.addEventListener('click', () => openDetailModal(parseInt(btn.dataset.id))));
+    document.querySelectorAll('.edit-btn').forEach(btn => btn.addEventListener('click', () => openEditModal(parseInt(btn.dataset.id))));
+    if (isBatchMode) {
+        document.querySelectorAll('.row-checkbox').forEach(cb => cb.addEventListener('change', function() {
+            const idx = parseInt(this.dataset.index);
+            if (this.checked) selectedItems.add(idx); else selectedItems.delete(idx);
+            updateSelectedCount();
+        }));
+    }
+    updateBatchDeleteButton();
+}
+
+function renderPagination(totalPages, position) {
+    let container = position==='top' ? tablePaginationTop : pagination;
+    container.innerHTML = '';
+    if (totalPages<=1) { if(position==='top') container.innerHTML='<div class="group-summary">共1页</div>'; return; }
+    const nav = document.createElement('div'); nav.className='pagination-nav';
+    const firstBtn = document.createElement('button'); firstBtn.className=`page-btn ${currentPage===1?'disabled':''}`; firstBtn.innerHTML='&laquo;'; firstBtn.disabled=currentPage===1; firstBtn.onclick=()=>{if(currentPage>1){currentPage=1;renderTable();}}; nav.appendChild(firstBtn);
+    const prevBtn = document.createElement('button'); prevBtn.className=`page-btn ${currentPage===1?'disabled':''}`; prevBtn.innerHTML='&lsaquo;'; prevBtn.disabled=currentPage===1; prevBtn.onclick=()=>{if(currentPage>1){currentPage--;renderTable();}}; nav.appendChild(prevBtn);
+    let startPage = Math.max(1, currentPage-2), endPage = Math.min(totalPages, currentPage+2);
+    for(let i=startPage; i<=endPage; i++) {
+        const pgBtn = document.createElement('button'); pgBtn.className=`page-btn ${i===currentPage?'active':''}`; pgBtn.textContent=i; pgBtn.onclick=()=>{currentPage=i;renderTable();}; nav.appendChild(pgBtn);
+    }
+    const nextBtn = document.createElement('button'); nextBtn.className=`page-btn ${currentPage===totalPages?'disabled':''}`; nextBtn.innerHTML='&rsaquo;'; nextBtn.disabled=currentPage===totalPages; nextBtn.onclick=()=>{if(currentPage<totalPages){currentPage++;renderTable();}}; nav.appendChild(nextBtn);
+    const lastBtn = document.createElement('button'); lastBtn.className=`page-btn ${currentPage===totalPages?'disabled':''}`; lastBtn.innerHTML='&raquo;'; lastBtn.disabled=currentPage===totalPages; lastBtn.onclick=()=>{if(currentPage<totalPages){currentPage=totalPages;renderTable();}}; nav.appendChild(lastBtn);
+    container.appendChild(nav);
+    if(position==='top') { let info=document.createElement('div'); info.className='group-summary'; info.textContent=`第 ${currentPage} 页 / 共 ${totalPages} 页`; container.appendChild(info); }
+}
+
+function updateStats() {
+    let householdCount = villagers.filter(v=>v.与户主关系==='户主').length;
+    let totalCount = villagers.filter(v=>!(v.备注一&&v.备注一.includes('死亡')||v.备注二&&v.备注二.includes('死亡'))).length;
+    let maleCount = villagers.filter(v=>v.性别==='男').length;
+    let femaleCount = villagers.length - maleCount;
+    let groupSet = new Set();
+    villagers.forEach(v=>{ let m=v.户籍地址.match(/湾泥[渡]?村\s*(\d+)\s*组/); groupSet.add(m?m[1]:'其他'); });
+    let groupCount = groupSet.size;
+    let deceasedCount = villagers.filter(v=>v.备注一?.includes('死亡')||v.备注二?.includes('死亡')).length;
+    let noHouseholdCount = villagers.filter(v=>v.与户主关系==='独立').length;
+    statsRow.innerHTML = `<div class="stat-item"><div class="stat-value">${groupCount}</div><div class="stat-label">总组数</div></div><div class="stat-item"><div class="stat-value">${householdCount}</div><div class="stat-label">总户数</div></div><div class="stat-item"><div class="stat-value">${totalCount}</div><div class="stat-label">总人数</div></div><div class="stat-item"><div class="stat-value">${maleCount}</div><div class="stat-label">男性</div></div><div class="stat-item"><div class="stat-value">${femaleCount}</div><div class="stat-label">女性</div></div><div class="stat-item"><div class="stat-value">${deceasedCount}</div><div class="stat-label">死亡</div></div><div class="stat-item"><div class="stat-value">${noHouseholdCount}</div><div class="stat-label">无户</div></div>`;
+}
+
+// ===== 重置 =====
+function resetAll() {
+    document.getElementById('search-input').value = '';
+    currentSearchKeyword = '';
+    currentAgeMin = null;
+    currentAgeMax = null;
+    document.getElementById('advAgeMin').value = '';
+    document.getElementById('advAgeMax').value = '';
+    document.querySelectorAll('.adv-tag').forEach(cb => cb.checked = false);
+    hideDeceased = false;
+    hideDeceasedCheckbox.checked = false;
+    loadVillagers();
+}
+document.getElementById('reset-btn').addEventListener('click', resetAll);
+
+// ===== 不显示死亡人员开关 =====
+hideDeceasedCheckbox.addEventListener('change', function() {
+    hideDeceased = this.checked;
+    loadVillagers();
+});
+
+// ===== 搜索 =====
+document.getElementById('search-btn').addEventListener('click', () => {
+    currentSearchKeyword = document.getElementById('search-input').value.trim().toLowerCase();
+    // 清除高级搜索条件
+    document.querySelectorAll('.adv-tag').forEach(cb => cb.checked = false);
+    currentAgeMin = null;
+    currentAgeMax = null;
+    document.getElementById('advAgeMin').value = '';
+    document.getElementById('advAgeMax').value = '';
+    loadVillagers();
+});
+document.getElementById('search-input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') document.getElementById('search-btn').click();
+});
+
+// ===== 高级搜索 =====
+document.getElementById('advanced-search-btn').addEventListener('click', () => {
+    advancedSearchModal.style.display = 'block';
+});
+document.getElementById('close-advanced-search').addEventListener('click', () => advancedSearchModal.style.display = 'none');
+document.getElementById('adv-search-cancel').addEventListener('click', () => advancedSearchModal.style.display = 'none');
+document.getElementById('adv-search-clear').addEventListener('click', () => {
+    document.querySelectorAll('.adv-tag').forEach(cb => cb.checked = false);
+    document.getElementById('advAgeMin').value = '';
+    document.getElementById('advAgeMax').value = '';
+});
+document.getElementById('advAgeClear').addEventListener('click', function() {
+    document.getElementById('advAgeMin').value = '';
+    document.getElementById('advAgeMax').value = '';
+});
+
+document.getElementById('adv-search-submit').addEventListener('click', function() {
+    const selected = Array.from(document.querySelectorAll('.adv-tag:checked')).map(cb => cb.value);
+    const ageMin = document.getElementById('advAgeMin').value;
+    const ageMax = document.getElementById('advAgeMax').value;
+    if (selected.length === 0 && ageMin === '' && ageMax === '') {
+        alert('请至少选择一个条件（标签或年龄范围）');
+        return;
+    }
+    currentSearchKeyword = '';
+    document.getElementById('search-input').value = '';
+    currentAgeMin = ageMin !== '' ? parseInt(ageMin) : null;
+    currentAgeMax = ageMax !== '' ? parseInt(ageMax) : null;
+    advancedSearchModal.style.display = 'none';
+    loadVillagers();
+});
+
+// ===== 添加/编辑 =====
+function openAddModal() {
+    document.getElementById('modal-title').textContent = '添加新村民';
+    document.getElementById('villager-form').reset();
+    document.getElementById('form-index').value = '';
+    document.querySelectorAll('input[name="tags"]').forEach(cb => cb.checked = false);
+    editModal.style.display = 'block';
+}
+function openEditModal(id) {
+    const v = villagers.find(v => v.id === id);
+    if (!v) return;
+    document.getElementById('modal-title').textContent = '编辑村民';
+    document.getElementById('form-name').value = v.姓名;
+    document.getElementById('form-gender').value = v.性别;
+    document.getElementById('form-id').value = v.公民身份证号码;
+    document.getElementById('form-address').value = v.户籍地址;
+    document.getElementById('form-relation').value = v.与户主关系;
+    document.getElementById('form-phone').value = v.电话号码 || '';
+    document.getElementById('form-note1').value = v.备注一 || '';
+    document.getElementById('form-note2').value = v.备注二 || '';
+    document.getElementById('form-index').value = id;
+    const tags = v.tags ? v.tags.split(',') : [];
+    document.querySelectorAll('input[name="tags"]').forEach(cb => cb.checked = tags.includes(cb.value));
+    editModal.style.display = 'block';
+}
+function closeEditModal() { editModal.style.display = 'none'; }
+document.getElementById('close-modal').addEventListener('click', closeEditModal);
+document.getElementById('cancel-edit').addEventListener('click', closeEditModal);
+document.getElementById('add-btn').addEventListener('click', openAddModal);
+
+document.getElementById('villager-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const id = document.getElementById('form-index').value;
+    const data = {
+        姓名: document.getElementById('form-name').value.trim(),
+        性别: document.getElementById('form-gender').value,
+        公民身份证号码: document.getElementById('form-id').value.trim(),
+        户籍地址: document.getElementById('form-address').value.trim(),
+        与户主关系: document.getElementById('form-relation').value,
+        电话号码: document.getElementById('form-phone').value.trim(),
+        备注一: document.getElementById('form-note1').value.trim(),
+        备注二: document.getElementById('form-note2').value.trim(),
+        tags: Array.from(document.querySelectorAll('input[name="tags"]:checked')).map(cb => cb.value).join(',')
+    };
+    if (!validateID(data.公民身份证号码)) { alert('身份证号码格式不正确'); return; }
+    if (id) {
+        localDB.updateVillager(parseInt(id), data);
+    } else {
+        localDB.addVillager(data);
+    }
+    closeEditModal();
+    loadVillagers();
+});
+
+// ===== 详情 =====
+function openDetailModal(id) {
+    const villager = villagers.find(v => v.id === id);
+    if (!villager) return;
+    currentHouseholdIndex = id;
+    const householdMembers = getHouseholdByAddress(villager);
+    const age = calculateAgeFromID(villager.公民身份证号码);
+    let detailHTML = `
+    <div class="detail-section">
+    <div class="detail-row"><div class="detail-label">姓名：</div><div class="detail-value">${villager.姓名} <button class="btn btn-xs btn-secondary copy-btn" onclick="copyText('${villager.姓名}')"><i class="fas fa-copy"></i></button></div></div>
+    <div class="detail-row"><div class="detail-label">性别：</div><div class="detail-value">${villager.性别}</div></div>
+    <div class="detail-row"><div class="detail-label">年龄：</div><div class="detail-value">${age>0?age+'岁':'未知'}</div></div>
+    <div class="detail-row"><div class="detail-label">身份证号：</div><div class="detail-value">${villager.公民身份证号码} <button class="btn btn-xs btn-secondary copy-btn" onclick="copyText('${villager.公民身份证号码}')"><i class="fas fa-copy"></i></button></div></div>
+    <div class="detail-row"><div class="detail-label">户籍地址：</div><div class="detail-value">${villager.户籍地址} <button class="btn btn-xs btn-secondary copy-btn" onclick="copyText('${villager.户籍地址}')"><i class="fas fa-copy"></i></button></div></div>
+    <div class="detail-row"><div class="detail-label">与户主关系：</div><div class="detail-value">${villager.与户主关系}</div></div>
+    <div class="detail-row"><div class="detail-label">电话：</div><div class="detail-value">${villager.电话号码 || ''}</div></div>`;
+    if (villager.tags) {
+        const tagList = villager.tags.split(',').map(t => `<span style="background:#e9f7fe; padding:2px 8px; border-radius:12px; margin-right:4px;">${t}</span>`).join('');
+        detailHTML += `<div class="detail-row"><div class="detail-label">特殊身份：</div><div class="detail-value">${tagList}</div></div>`;
+    }
+    if (villager.备注一 || villager.备注二) {
+        let notes = [];
+        if (villager.备注一) notes.push(`备注一：${villager.备注一}`);
+        if (villager.备注二) notes.push(`备注二：${villager.备注二}`);
+        detailHTML += `<div class="notes-section"><h4>备注信息</h4><div>${notes.join('<br>')}</div></div>`;
+    }
+    detailHTML += `<div class="household-management"><h4>家庭成员</h4><div id="household-members-list">`;
+    householdMembers.forEach((member) => {
+        const isCurrent = member.公民身份证号码 === villager.公民身份证号码;
+        const isDeceased = (member.备注一 && member.备注一.includes('死亡')) || (member.备注二 && member.备注二.includes('死亡'));
+        const memberAge = calculateAgeFromID(member.公民身份证号码);
+        detailHTML += `<div class="household-member-item"><div><strong><a href="#" onclick="event.preventDefault(); openDetailModal(${member.id})">${member.姓名}</a></strong><span class="family-relationship">(${member.与户主关系})</span>${memberAge>0?` ${memberAge}岁`:''}${isDeceased?' <span style="color:#b30000;">(死亡)</span>':''}${isCurrent?' <span style="color:#28a745;">(当前)</span>':''}</div>${!isCurrent?`<div class="member-actions"><button class="btn-danger btn-sm remove-member" data-id="${member.公民身份证号码}">移出</button></div>`:''}</div>`;
+    });
+    detailHTML += `<div class="photo-section" style="margin-top:20px; border-top:1px solid #eee; padding-top:15px;">
+        <h4>证件照片</h4>
+        <div id="photo-list-${villager.id}" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px;"></div>
+        <div class="photo-upload">
+            <input type="file" id="photo-input-${villager.id}" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;">
+            <button class="btn-primary select-photo-btn" data-id="${villager.id}">选择图片上传</button>
+        </div>
+    </div>`;
+    detailHTML += `<div class="kinship-section" style="margin-top:20px; border-top:1px solid #eee; padding-top:15px;">
+        <h4>亲属关系</h4>
+        <div id="kinship-list-${villager.id}" style="margin-bottom:10px;">加载中...</div>
+        <button class="btn-primary" onclick="openAddKinshipModal(${villager.id})" style="margin-top:5px;">添加亲属</button>
+    </div>`;
+    detailHTML += `</div><div class="household-actions"><button class="btn-success" id="add-member-btn"><i class="fas fa-user-plus"></i> 添加家庭成员</button></div></div>`;
+    document.getElementById('detail-content').innerHTML = detailHTML;
+    document.getElementById('detail-content').dataset.id = id;
+    let title = `${villager.姓名} 的详细信息`;
+    if ((villager.备注一 && villager.备注一.includes('死亡')) || (villager.备注二 && villager.备注二.includes('死亡'))) title += ' (死亡)';
+    if (villager.与户主关系 === '独立') title += ' (无户)';
+    document.getElementById('detail-title').textContent = title;
+    document.querySelectorAll('.remove-member').forEach(btn => btn.addEventListener('click', () => removeFromHousehold(btn.dataset.id)));
+    document.getElementById('add-member-btn')?.addEventListener('click', () => { currentHouseholdAddress = householdMembers[0]?.户籍地址 || villager.户籍地址; openSelectMemberModal(); });
+    loadPhotos(villager.id);
+    loadKinship(villager.id);
+    const selectBtn = document.querySelector(`.select-photo-btn[data-id="${villager.id}"]`);
+    const fileInput = document.getElementById(`photo-input-${villager.id}`);
+    if (selectBtn && fileInput) {
+        selectBtn.onclick = () => fileInput.click();
+        fileInput.onchange = () => { if (fileInput.files.length > 0) uploadPhoto(villager.id); };
+    }
+    detailModal.style.display = 'block';
+}
+function closeDetailModal() { detailModal.style.display = 'none'; }
+document.getElementById('close-detail').addEventListener('click', closeDetailModal);
+document.getElementById('close-detail-btn').addEventListener('click', closeDetailModal);
+
+// ===== 照片 =====
+async function loadPhotos(villagerId) {
+    const container = document.getElementById(`photo-list-${villagerId}`);
+    if (!container) return;
+    const photos = localDB.getPhotos(villagerId);
+    if (photos.length === 0) { container.innerHTML = '<p style="color:#999;">暂无证件照片</p>'; return; }
+    let html = '';
+    for (let photo of photos) {
+        const imgSrc = photo.image_data ? `data:image/jpeg;base64,${photo.image_data}` : '';
+        html += `
+            <div style="border:1px solid #ddd; border-radius:8px; padding:5px; width:120px; text-align:center;">
+                ${imgSrc ? `<img src="${imgSrc}" style="width:100px; height:100px; object-fit:cover; cursor:pointer;" onclick="window.open('${imgSrc}')" alt="证件照">` : '<div style="width:100px;height:100px;background:#eee;">无图片</div>'}
+                <div style="font-size:12px; margin-top:5px;">
+                    <span class="editable-desc" data-id="${photo.id}" data-villager="${villagerId}" contenteditable="true" style="display:inline-block; min-width:60px; border-bottom:1px dashed #ccc; cursor:text;">${photo.description || '无描述'}</span>
+                </div>
+                <button class="btn-danger btn-sm" style="font-size:10px; padding:2px 6px; margin-top:4px;" onclick="deletePhoto(${photo.id}, ${villagerId})">删除</button>
+            </div>
+        `;
+    }
+    container.innerHTML = html;
+    document.querySelectorAll('.editable-desc').forEach(elem => {
+        const photoId = elem.dataset.id;
+        const villagerId = elem.dataset.villager;
+        let oldValue = elem.innerText;
+        elem.addEventListener('blur', () => {
+            const newValue = elem.innerText.trim();
+            if (newValue !== oldValue) {
+                localDB.updatePhotoDescription(parseInt(photoId), newValue);
+                oldValue = newValue;
+            }
+        });
+        elem.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); elem.blur(); } });
+    });
+}
+async function uploadPhoto(villagerId) {
+    const fileInput = document.getElementById(`photo-input-${villagerId}`);
+    const file = fileInput.files[0];
+    if (!file) { alert('请选择图片'); return; }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64 = e.target.result.split(',')[1];
+        localDB.addPhoto(villagerId, file.name, base64, '');
+        fileInput.value = '';
+        loadPhotos(villagerId);
+    };
+    reader.readAsDataURL(file);
+}
+async function deletePhoto(photoId, villagerId) {
+    if (!confirm('确定删除这张照片吗？')) return;
+    localDB.deletePhoto(photoId);
+    loadPhotos(villagerId);
+}
+
+// ===== 亲属关系 =====
+async function loadKinship(villagerId) {
+    const container = document.getElementById(`kinship-list-${villagerId}`);
+    if (!container) return;
+    const data = localDB.getKinship(villagerId);
+    if (data.length === 0) { container.innerHTML = '<p style="color:#999;">暂无亲属关系</p>'; return; }
+    const groups = {};
+    for (let item of data) {
+        const rel = item.relation || '其他';
+        if (!groups[rel]) groups[rel] = [];
+        groups[rel].push(item);
+    }
+    let html = '<div style="display:flex; flex-direction:column; gap:5px;">';
+    for (let [rel, list] of Object.entries(groups)) {
+        html += `<div><strong>${rel}：</strong>`;
+        html += list.map(p => {
+            let delBtn = `<button class="btn-sm" style="font-size:11px; padding:2px 8px; border-radius:20px; border:1px solid #dc3545; background:white; color:#dc3545; margin-left:6px; cursor:pointer;" onclick="deleteKinship(${p.relation_id}, ${villagerId})">移除</button>`;
+            return `<span style="background:#f0f2f5; padding:5px 12px; border-radius:30px; display:inline-flex; align-items:center; margin-right:5px; margin-bottom:5px;"><a href="#" onclick="event.preventDefault(); openDetailModal(${p.id})">${p.name}</a>${delBtn}</span>`;
+        }).join('');
+        html += '</div>';
+    }
+    container.innerHTML = html;
+}
+async function deleteKinship(relationId, villagerId) {
+    if (!confirm('确定删除这条亲属关系吗？')) return;
+    localDB.deleteKinship(relationId);
+    loadKinship(villagerId);
+}
+function openAddKinshipModal(villagerId) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:2000;display:flex;align-items:center;justify-content:center;';
+    const modal = document.createElement('div');
+    modal.style.cssText = 'background:white;padding:20px;border-radius:12px;width:350px;max-width:90%;';
+    const datalistId = `rel-${Date.now()}`;
+    const options = villagers.filter(v => v.id !== villagerId).map(v => `<option value="${v.姓名}">${v.姓名}</option>`).join('');
+    modal.innerHTML = `
+        <h3>添加亲属关系</h3>
+        <div style="margin:15px 0;"><label>关系类型</label><select id="rel-type" style="width:100%;padding:8px;">
+            <option value="父亲">父亲</option><option value="母亲">母亲</option>
+            <option value="丈夫">丈夫</option><option value="妻子">妻子</option>
+            <option value="儿子">儿子</option><option value="儿媳">儿媳</option>
+            <option value="女儿">女儿</option>
+            <option value="哥哥">哥哥</option><option value="弟弟">弟弟</option>
+            <option value="姐姐">姐姐</option><option value="妹妹">妹妹</option>
+            <option value="爷爷">爷爷</option><option value="奶奶">奶奶</option>
+            <option value="孙子">孙子</option><option value="孙女">孙女</option>
+        </select></div>
+        <div style="margin:15px 0;"><label>对方姓名</label><input type="text" id="rel-other-input" list="${datalistId}" style="width:100%;padding:8px;" placeholder="输入姓名"><datalist id="${datalistId}">${options}</datalist></div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;"><button id="cancel-rel" class="btn-secondary">取消</button><button id="save-rel" class="btn-primary">保存</button></div>
+    `;
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    document.getElementById('cancel-rel').onclick = () => overlay.remove();
+    document.getElementById('save-rel').onclick = () => {
+        const relation = document.getElementById('rel-type').value;
+        const otherName = document.getElementById('rel-other-input').value.trim();
+        const other = villagers.find(v => v.姓名 === otherName && v.id !== villagerId);
+        if (!other) { alert('未找到该村民'); return; }
+        try { localDB.addKinship(villagerId, other.id, relation); overlay.remove(); loadKinship(villagerId); } catch(e) { alert(e.message); }
+    };
+}
+
+// ===== 家庭成员管理 =====
+function openSelectMemberModal() {
+    const available = villagers.filter(v => v.与户主关系 === '独立' && v.户籍地址 !== currentHouseholdAddress);
+    let html = available.length === 0 ? '<p>暂无可用村民</p>' :
+        available.map(m => `<div class="household-member-item"><div><strong>${m.姓名}</strong> <span class="family-relationship">(${m.与户主关系})</span> ${calculateAgeFromID(m.公民身份证号码)||''}</div><div class="member-actions"><button class="btn-success btn-sm add-existing-member" data-id="${m.公民身份证号码}">加入本户</button></div></div>`).join('');
+    document.getElementById('available-members-list').innerHTML = html;
+    document.querySelectorAll('.add-existing-member').forEach(btn => btn.addEventListener('click', () => addExistingMemberToHousehold(btn.dataset.id)));
+    selectMemberModal.style.display = 'block';
+}
+function closeSelectMemberModal() { selectMemberModal.style.display = 'none'; }
+document.getElementById('close-select-member').addEventListener('click', closeSelectMemberModal);
+document.getElementById('cancel-select-member').addEventListener('click', closeSelectMemberModal);
+document.getElementById('add-new-member-btn').addEventListener('click', () => { closeSelectMemberModal(); addHouseholdMember(currentHouseholdAddress); });
+
+function addHouseholdMember(address) {
+    openAddModal();
+    setTimeout(() => {
+        document.getElementById('form-address').value = address;
+        const relationSelect = document.getElementById('form-relation');
+        for (let i=0; i<relationSelect.options.length; i++) {
+            if (relationSelect.options[i].value === '户主') relationSelect.options[i].disabled = true;
+        }
+        document.getElementById('form-relation').value = '其他';
+    }, 100);
+}
+async function addExistingMemberToHousehold(idCard) {
+    if (!confirm('确定将此人加入本户吗？')) return;
+    const v = villagers.find(v => v.公民身份证号码 === idCard);
+    if (!v) return;
+    v.户籍地址 = currentHouseholdAddress;
+    v.与户主关系 = '其他';
+    localDB.updateVillager(v.id, v);
+    closeSelectMemberModal();
+    loadVillagers();
+    const currentId = parseInt(document.getElementById('detail-content')?.dataset?.id);
+    if (currentId) openDetailModal(currentId);
+}
+async function removeFromHousehold(idCard) {
+    if (!confirm('确定移出本户吗？')) return;
+    const v = villagers.find(v => v.公民身份证号码 === idCard);
+    if (!v) return;
+    v.与户主关系 = '独立';
+    localDB.updateVillager(v.id, v);
+    loadVillagers();
+    const currentId = parseInt(document.getElementById('detail-content')?.dataset?.id);
+    if (currentId) openDetailModal(currentId);
+}
+
+// ===== 删除 =====
+function openDeleteModal(id) {
+    const v = villagers.find(v => v.id === id);
+    if (!v) return;
+    document.getElementById('delete-name').textContent = v.姓名;
+    document.getElementById('delete-index').value = id;
+    deleteModal.style.display = 'block';
+    closeDetailModal();
+}
+function closeDeleteModal() { deleteModal.style.display = 'none'; }
+document.getElementById('cancel-delete').addEventListener('click', closeDeleteModal);
+document.getElementById('confirm-delete').addEventListener('click', function() {
+    const id = parseInt(document.getElementById('delete-index').value);
+    if (!id) return;
+    if (!confirm('确定永久删除吗？')) return;
+    localDB.deleteVillager(id);
+    closeDeleteModal();
+    loadVillagers();
+});
+
+// ===== 各组统计 =====
+document.getElementById('group-stats-btn').addEventListener('click', function() {
+    const groupStats = {};
+    villagers.forEach(v => {
+        let groupNum = '其他';
+        const m = v.户籍地址.match(/湾泥[渡]?村\s*(\d+)\s*组/);
+        if(m && m[1]) groupNum = m[1];
+        if(!groupStats[groupNum]) groupStats[groupNum] = { households: new Set(), members:0, males:0, females:0, deceased:0 };
+        groupStats[groupNum].members++;
+        if(v.性别==='男') groupStats[groupNum].males++; else groupStats[groupNum].females++;
+        if((v.备注一 && v.备注一.includes('死亡')) || (v.备注二 && v.备注二.includes('死亡'))) groupStats[groupNum].deceased++;
+        if(v.与户主关系 === '户主') groupStats[groupNum].households.add(v.户籍地址);
+    });
+    let statsHTML = `<table class="group-stats-table"><thead><tr><th style="background:#4a6fa5;color:white;">组号</th><th style="background:#4a6fa5;color:white;">户数</th><th style="background:#4a6fa5;color:white;">总人数</th><th style="background:#4a6fa5;color:white;">男性</th><th style="background:#4a6fa5;color:white;">女性</th><th style="background:#4a6fa5;color:white;">死亡</th></tr></thead><tbody>`;
+    const sortedGroups = Object.keys(groupStats).sort((a,b)=>{ if(a==='其他') return 1; if(b==='其他') return -1; return parseInt(a)-parseInt(b); });
+    sortedGroups.forEach(g => { const s = groupStats[g]; statsHTML += `<tr><td>${g==='其他'?'其他':g+'组'}</td><td>${s.households.size}</td><td>${s.members}</td><td>${s.males}</td><td>${s.females}</td><td>${s.deceased}</td></tr>`; });
+    let totalHouseholds=0, totalMembers=0, totalMales=0, totalFemales=0, totalDeceased=0;
+    sortedGroups.forEach(g => { const s = groupStats[g]; totalHouseholds += s.households.size; totalMembers += s.members; totalMales += s.males; totalFemales += s.females; totalDeceased += s.deceased; });
+    statsHTML += `<tr style="font-weight: bold; background-color: #f0f8ff;"><td>总计</td><td>${totalHouseholds}</td><td>${totalMembers}</td><td>${totalMales}</td><td>${totalFemales}</td><td>${totalDeceased}</td></tr></tbody></table>`;
+    document.getElementById('group-stats-content').innerHTML = statsHTML;
+    groupStatsModal.style.display = 'block';
+});
+document.getElementById('close-group-stats').addEventListener('click', () => groupStatsModal.style.display = 'none');
+
+// ===== 图表 =====
+document.getElementById('chart-btn').addEventListener('click', () => {
+    chartModal.style.display = 'block';
+    setTimeout(createCharts, 100);
+});
+document.getElementById('close-chart').addEventListener('click', () => {
+    chartModal.style.display = 'none';
+    if (genderChart) genderChart.destroy();
+    if (ageChart) ageChart.destroy();
+    if (groupChart) groupChart.destroy();
+});
+function createCharts() {
+    const maleCount = villagers.filter(v=>v.性别==='男').length;
+    const femaleCount = villagers.filter(v=>v.性别==='女').length;
+    const genderCtx = document.getElementById('gender-chart').getContext('2d');
+    if(genderChart) genderChart.destroy();
+    genderChart = new Chart(genderCtx, { type:'pie', data:{ labels:['男性','女性'], datasets:[{ data:[maleCount,femaleCount], backgroundColor:['#4a6fa5','#e83e8c'] }] }, options:{ responsive:true, plugins:{ legend:{ position:'bottom' }, title:{ display:true, text:`总人数: ${villagers.length}` } } } });
+    const ageGroups = { '0-17岁':0, '18-35岁':0, '36-59岁':0, '60岁以上':0 };
+    villagers.forEach(v => { const a = calculateAgeFromID(v.公民身份证号码); if(a>0){ if(a<=17) ageGroups['0-17岁']++; else if(a<=35) ageGroups['18-35岁']++; else if(a<=59) ageGroups['36-59岁']++; else ageGroups['60岁以上']++; } });
+    const ageCtx = document.getElementById('age-chart').getContext('2d');
+    if(ageChart) ageChart.destroy();
+    ageChart = new Chart(ageCtx, { type:'bar', data:{ labels:Object.keys(ageGroups), datasets:[{ label:'人数', data:Object.values(ageGroups), backgroundColor:'#28a745', borderColor:'#1e7e34', borderWidth:1 }] }, options:{ responsive:true, scales:{ y:{ beginAtZero:true, ticks:{ stepSize:1 } } } } });
+    const groupData = {};
+    villagers.forEach(v => { let groupNum='其他'; const m=v.户籍地址.match(/湾泥[渡]?村\s*(\d+)\s*组/); if(m&&m[1]) groupNum=m[1]; groupData[groupNum]=(groupData[groupNum]||0)+1; });
+    const sortedGroups = Object.keys(groupData).sort((a,b)=>{ if(a==='其他') return 1; if(b==='其他') return -1; return parseInt(a)-parseInt(b); });
+    const groupLabels = sortedGroups.map(g=>g==='其他'?'其他':`${g}组`);
+    const groupValues = sortedGroups.map(g=>groupData[g]);
+    const groupCtx = document.getElementById('group-chart').getContext('2d');
+    if(groupChart) groupChart.destroy();
+    groupChart = new Chart(groupCtx, { type:'line', data:{ labels:groupLabels, datasets:[{ label:'人口数', data:groupValues, backgroundColor:'rgba(255,193,7,0.2)', borderColor:'#ffc107', borderWidth:2, fill:true, tension:0.4 }] }, options:{ responsive:true, scales:{ y:{ beginAtZero:true, ticks:{ stepSize:1 } } } } });
+}
+
+// ===== 批量操作 =====
+document.getElementById('batch-delete-btn').addEventListener('click', function() {
+    isBatchMode = !isBatchMode;
+    document.getElementById('batch-toolbar').style.display = isBatchMode ? 'block' : 'none';
+    if (!isBatchMode) { selectedItems.clear(); updateSelectedCount(); }
+    renderTable();
+});
+document.getElementById('cancel-batch').addEventListener('click', function() {
+    isBatchMode = false;
+    document.getElementById('batch-toolbar').style.display = 'none';
+    selectedItems.clear();
+    renderTable();
+});
+document.getElementById('confirm-batch-delete').addEventListener('click', async function() {
+    if (selectedItems.size === 0) return;
+    if (!confirm(`确定删除选中的 ${selectedItems.size} 条记录吗？`)) return;
+    const ids = Array.from(selectedItems).map(i => currentVillagers[i].id);
+    for (let id of ids) { localDB.deleteVillager(id); }
+    loadVillagers();
+    cancelBatchMode();
+    alert('删除成功');
+});
+document.getElementById('batch-edit-btn').addEventListener('click', function() {
+    if (selectedItems.size === 0) { alert('请先选择记录'); return; }
+    batchEditModal.style.display = 'block';
+});
+document.getElementById('close-batch-edit').addEventListener('click', () => batchEditModal.style.display = 'none');
+document.getElementById('cancel-batch-edit').addEventListener('click', () => batchEditModal.style.display = 'none');
+document.getElementById('batch-field').addEventListener('change', function() {
+    document.getElementById('batch-value-container').style.display = this.value ? 'block' : 'none';
+});
+document.getElementById('apply-batch-edit').addEventListener('click', async function() {
+    const field = document.getElementById('batch-field').value;
+    const value = document.getElementById('batch-value').value.trim();
+    if (!field) { alert('请选择字段'); return; }
+    if (!value && field !== '备注一' && field !== '备注二') { alert('请输入新值'); return; }
+    if (!confirm(`确定将选中的 ${selectedItems.size} 条记录的"${field}"修改为"${value}"吗？`)) return;
+    const ids = Array.from(selectedItems).map(i => currentVillagers[i].id);
+    for (let id of ids) {
+        const v = villagers.find(v => v.id === id);
+        if (!v) continue;
+        if (field === '户籍地址') {
+            if (!value.includes('湾泥渡村') && !value.includes('湾泥村')) v[field] = `湾泥村${value}`;
+            else v[field] = value;
+        } else {
+            v[field] = value;
+        }
+        localDB.updateVillager(id, v);
+    }
+    loadVillagers();
+    cancelBatchMode();
+    alert(`修改了 ${ids.length} 条记录`);
+});
+function updateSelectedCount() {
+    document.getElementById('selected-count').textContent = selectedItems.size;
+    updateBatchDeleteButton();
+}
+function updateBatchDeleteButton() {
+    document.getElementById('batch-delete-btn').innerHTML = `<i class="fas fa-trash-alt"></i> 批量删除${selectedItems.size>0?`(${selectedItems.size})`:''}`;
+}
+function cancelBatchMode() {
+    isBatchMode = false;
+    document.getElementById('batch-toolbar').style.display = 'none';
+    selectedItems.clear();
+    renderTable();
+}
+
+// ===== 导出数据 =====
+document.getElementById('export-data-btn').addEventListener('click', function() {
+    const data = localDB.exportAll();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `村民数据_${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});
+
+// ===== 导入数据 =====
+document.getElementById('import-data-btn').addEventListener('click', () => {
+    importModal.style.display = 'block';
+    document.getElementById('import-file').value = '';
+});
+document.getElementById('close-import').addEventListener('click', () => importModal.style.display = 'none');
+document.getElementById('cancel-import').addEventListener('click', () => importModal.style.display = 'none');
+document.getElementById('start-import').addEventListener('click', function() {
+    const fileInput = document.getElementById('import-file');
+    const file = fileInput.files[0];
+    if (!file) { alert('请选择文件'); return; }
+    const mode = document.querySelector('input[name="import-mode"]:checked').value;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (!data.data || !data.data.villagers) { alert('无效的数据文件'); return; }
+            if (mode === 'replace' && !confirm('替换模式将清除所有现有数据，确定继续吗？')) return;
+            localDB.importData(data.data, mode);
+            loadVillagers();
+            alert('导入成功！');
+            importModal.style.display = 'none';
+        } catch(err) {
+            alert('导入失败：' + err.message);
+        }
+    };
+    reader.readAsText(file);
+});
+
+// ===== 打印详情 =====
+document.getElementById('print-detail-btn').addEventListener('click', function() {
+    const id = parseInt(document.getElementById('detail-content')?.dataset?.id);
+    if (!id) return;
+    const v = villagers.find(v => v.id === id);
+    if (!v) return;
+    const household = getHouseholdByAddress(v);
+    const age = calculateAgeFromID(v.公民身份证号码);
+    const content = `
+        <html><head><title>${v.姓名} 详细信息</title><style>body{font-family:Microsoft YaHei;padding:20px;}table{width:100%;border-collapse:collapse;margin-top:10px;}th,td{border:1px solid #333;padding:6px 10px;text-align:left;}th{background:#f2f2f2;}</style></head>
+        <body><h1>${v.姓名} · 详细信息</h1>
+        <p><strong>性别：</strong>${v.性别}</p>
+        <p><strong>年龄：</strong>${age>0?age+'岁':'未知'}</p>
+        <p><strong>身份证号：</strong>${v.公民身份证号码}</p>
+        <p><strong>户籍地址：</strong>${v.户籍地址}</p>
+        <p><strong>与户主关系：</strong>${v.与户主关系}</p>
+        <p><strong>电话：</strong>${v.电话号码||''}</p>
+        ${v.tags ? `<p><strong>特殊身份：</strong>${v.tags}</p>` : ''}
+        <h3>家庭成员 (${household.length}人)</h3>
+        <table><tr><th>姓名</th><th>性别</th><th>年龄</th><th>与户主关系</th></tr>
+        ${household.map(m => `<tr><td>${m.姓名}</td><td>${m.性别}</td><td>${calculateAgeFromID(m.公民身份证号码)||''}</td><td>${m.与户主关系}</td></tr>`).join('')}
+        </table>
+        <p style="margin-top:30px;color:#888;font-size:12px;">打印时间：${new Date().toLocaleString()}</p>
+        </body></html>
+    `;
+    const win = window.open('', '_blank');
+    win.document.write(content);
+    win.document.close();
+    setTimeout(() => { win.print(); win.close(); }, 500);
+});
+
+// ===== 编辑/删除详情按钮 =====
+document.getElementById('edit-detail-btn').addEventListener('click', function() {
+    const id = parseInt(document.getElementById('detail-content')?.dataset?.id);
+    if (!id) return;
+    closeDetailModal();
+    setTimeout(() => openEditModal(id), 100);
+});
+document.getElementById('delete-detail-btn').addEventListener('click', function() {
+    const id = parseInt(document.getElementById('detail-content')?.dataset?.id);
+    if (!id) return;
+    openDeleteModal(id);
+});
+
+// ===== 复制 =====
+function copyText(text) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => showCopyTip('已复制：' + text)).catch(() => fallbackCopy(text));
+    } else { fallbackCopy(text); }
+}
+function fallbackCopy(text) {
+    const input = document.createElement('input');
+    input.value = text;
+    input.style.position = 'fixed';
+    input.style.left = '-9999px';
+    input.style.top = '0';
+    document.body.appendChild(input);
+    input.select();
+    try { document.execCommand('copy'); showCopyTip('已复制：' + text); } catch(e) { alert('复制失败'); }
+    document.body.removeChild(input);
+}
+function showCopyTip(msg) {
+    const tip = document.createElement('div');
+    tip.textContent = msg;
+    tip.style.cssText = `position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#4a6fa5;color:#fff;padding:8px 24px;border-radius:20px;font-size:14px;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.2);opacity:0;transition:opacity 0.3s;`;
+    document.body.appendChild(tip);
+    setTimeout(() => tip.style.opacity = '1', 10);
+    setTimeout(() => { tip.style.opacity = '0'; setTimeout(() => tip.remove(), 300); }, 2000);
+}
+
+// ===== 每页数量 =====
+document.getElementById('items-per-page-top').addEventListener('change', function() {
+    itemsPerPage = parseInt(this.value);
+    document.getElementById('items-per-page-bottom').value = this.value;
+    currentPage = 1;
+    renderTable();
+});
+document.getElementById('items-per-page-bottom').addEventListener('change', function() {
+    itemsPerPage = parseInt(this.value);
+    document.getElementById('items-per-page-top').value = this.value;
+    currentPage = 1;
+    renderTable();
+});
+
+// ===== 点击外部关闭模态框 =====
+window.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal')) e.target.style.display = 'none';
+});
+
+// ============================================================
+// 4. 启动应用
+// ============================================================
+async function initApp() {
+    await initSQL();
+    // 从 localStorage 恢复隐藏死亡状态
+    const savedHide = localStorage.getItem('hideDeceased');
+    if (savedHide === 'true') {
+        hideDeceased = true;
+        hideDeceasedCheckbox.checked = true;
+    }
+    loadVillagers();
+    document.getElementById('mainApp').style.display = 'block';
+}
+document.addEventListener('DOMContentLoaded', initApp);
+</script>
+</body>
+</html>
